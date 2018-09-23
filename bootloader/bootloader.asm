@@ -5,29 +5,27 @@ mov bp, 0x7BFF
 mov sp, bp
 
 mov [drive], dl
-call load_disk
 
 call clear
 
-mov si, str_error
-call putstr
-
-mov al, ' '
-call putchar
-
-mov bx, 0xab
+mov bl, dl
 call puthex
 
-jmp $
+call load_disk
+
+mov bx, [0x7fff]
+call puthex
+
+jmp more_memory_zone
 
 %include "video.asm"
 
 load_disk:
 	pusha
-		mov word[disk_address_packet + 2], 1
+		mov word[disk_address_packet + 2], 0x580
 		mov word[disk_address_packet + 4], 0x7e00
 		mov word[disk_address_packet + 6], 0x0
-		mov word[disk_address_packet + 15], 0x1
+		mov word[disk_address_packet + 8], 0x1
 		
 		mov ax, 0
 		mov ds, ax
@@ -35,6 +33,10 @@ load_disk:
 		mov dl, byte[drive]
 		mov si, disk_address_packet
 		int 0x13
+
+		mov bl, ah
+		call puthex
+
 	popa
 	ret
 
@@ -52,7 +54,9 @@ disk_address_packet:
 times 510 - ($-$$) db 0
 dw 0xaa55
 
-times 1023 - ($-$$) db 1
-db 55
+more_memory_zone:
+	
+	cli
+	
 
-
+	jmp $

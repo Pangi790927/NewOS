@@ -1,39 +1,43 @@
 INT_VIDEO_SERVICE equ 0x10
-INT_WRITE_CHAR equ 0xE
+INT_WRITE_CHAR equ 0xe
 INT_SET_CURSOR equ 0x2
 INT_CLEAR equ 0x6
 
+digit_hex:
+	db "0123456789ABCDEF"
+
 ; bx
-puthex:
-	.digit_hex:
-		db "0123456789ABCDEF"
+puthex:	
 	pusha
 		.terminator:
 			db "0x", 0
 		mov si, .terminator
 		call putstr
 
-		test bx, bx
-		jne .puthex_rec
-		mov al, '0'
+		mov di, bx
+		and di, 0xF000
+		shr di, 12
+		mov al, byte[digit_hex + di]
+		call putchar
+
+		mov di, bx
+		and di, 0x0F00
+		shr di, 8
+		mov al, byte[digit_hex + di]
+		call putchar
+
+		mov di, bx
+		and di, 0x00F0
+		shr di, 4
+		mov al, byte[digit_hex + di]
+		call putchar
+
+		mov di, bx
+		and di, 0x000F
+		mov al, byte[digit_hex + di]
 		call putchar
 	popa
 	ret
-
-	.puthex_rec:
-		pusha
-			test bx, bx
-			je .end
-			mov si, bx
-			and si, 0xF
-			add si, .digit_hex
-			shr bx, 0x4
-			call .puthex_rec
-			mov al, byte[si]
-			call putchar
-			.end:
-		popa
-		ret
 
 ; si -> NULL terminated string
 putstr:
@@ -53,7 +57,7 @@ putstr:
 putchar:
 	pusha
 		mov ah, INT_WRITE_CHAR
-		mov cx,  0
+		mov bh, 0
 		int INT_VIDEO_SERVICE
 	popa
 	ret
