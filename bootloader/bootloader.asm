@@ -54,9 +54,9 @@ disk_address_packet:
 times 510 - ($-$$) db 0
 dw 0xaa55
 
+%include "start_protected.asm"
+
 more_memory_zone:
-	
-	cli
-	
+		
 
 	jmp $
